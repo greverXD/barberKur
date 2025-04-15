@@ -44,7 +44,7 @@ const GoToPage = (link) => {
        
        <div class="flex flex-row  items-center">
 
-        <!-- <router-link :to="perem"><img :src="icon" class="w-[1.5vw] h-[3vh] rotate-270"></router-link> -->
+        
         <div><img :src="icon" class="w-[1.5vw] h-[3vh] rotate-270"></div>
      </div>
    </div> 

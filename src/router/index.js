@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeIndex from '../pages/home.vue'
 import Hehe from '../pages/hehe.vue'
+import index from '../pages/index.vue'
+import master from '../pages/chooseMaster.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +17,16 @@ const router = createRouter({
       name: 'hehe',
       component: Hehe,
     },
+    {
+      path: '/time',
+      name: 'time',
+      component: index,
+    },
+    {
+      path: '/master',
+      name: 'master',
+      component: master,
+    }
     // {
     //   path: '/about',
     //   name: 'about',

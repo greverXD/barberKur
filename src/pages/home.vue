@@ -5,7 +5,7 @@ import list from "@/assets/list.png";
 import { RouterLink } from 'vue-router'
 import arrow from "@/assets/arrow.png";
 import InputBlock from "@/components/inputBlock.vue";
-
+import { useGlobalStore } from '@/stores/global'
 
 const items =[
   {
@@ -13,22 +13,22 @@ const items =[
     label:"Выбрать специалиста",
     icon:arrow,
     
-    link: 'hehe'
+    link: 'master'
   },
   {
     img: calendar,
     label:"Выбрать дату и время",
     icon:arrow,
-    link: ''
+    link: 'time'
   },
   {
     img: list,
     label:"Выбрать услуги",
     icon:arrow,
-    link: ''
+    link: 'hehe'
   },
 ]
-
+const store = useGlobalStore()
 
 </script>
 
@@ -43,7 +43,7 @@ const items =[
       <img :src = "img" class=" w-[1.5vw] h-[3vh]">
        </div>
   <div class="flex flex-col gap-y-2 mb-[2vh]">
-     <div class="flex items-center gap-x-4"><p class="text-4xl">Город</p><router-link to="/hehe"><img :src="arrow" class="w-[1.5vw] h-[3vh] mt-[10px] "></router-link></div>
+     <div class="flex items-center gap-x-4"><p class="text-4xl">Город</p><img :src="arrow" class="w-[1.5vw] h-[3vh] mt-[10px] "></div>
      <p class="text-1xl text-bold">Улица</p>
    </div> 
 <div class="flex gap-y-2 flex-col">
@@ -57,4 +57,7 @@ const items =[
             />
 </div>
 </div> 
+
+
+<p>Проверка {{ store.time }}</p>
 </template>
