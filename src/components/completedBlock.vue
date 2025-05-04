@@ -1,18 +1,17 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, defineEmits } from 'vue';
 import { useGlobalStore } from '@/stores/global';
 
 const store = useGlobalStore();
+const emit = defineEmits(['go-to-next']);
 
-// Вычисляем суммарное время в минутах
 const totalTime = computed(() => {
   return store.selectedBlocks.reduce((sum, block) => {
-    const minutes = parseInt(block.time) || 0;
+    const minutes = parseInt(block.timeWork) || 0;
     return sum + minutes;
   }, 0);
 });
 
-// Конвертируем общее время в часы и минуты
 const formattedTime = computed(() => {
   const hours = Math.floor(totalTime.value / 60);
   const minutes = totalTime.value % 60;
@@ -25,7 +24,6 @@ const formattedTime = computed(() => {
   return `${hours} ч ${minutes} мин`;
 });
 
-// Вычисляем сумму moneyOne и moneyTwo
 const priceRange = computed(() => {
   if (store.selectedBlocks.length === 0) {
     return { min: 0, max: 0 };
@@ -43,29 +41,27 @@ const priceRange = computed(() => {
 <template>
   <div
     v-if="store.selectedBlocks.length > 0"
-    class="w-[40vw] mx-auto mt-6 p-6 bg-white rounded-2xl "
+    class="fixed bottom-0 left-0 w-full bg-white p-4 shadow-md z-50"
   >
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Выбранные услуги</h2>
-    <div class="flex flex-col gap-y-4">
+    <div class="flex w-[40vw] mx-auto flex-row justify-between gap-y-4">
       <div>
-        <p class="text-lg font-semibold text-gray-700">Услуги:</p>
-        <ul class="pl-5 text-gray-600">
-          <li v-for="(block, index) in store.selectedBlocks" :key="index">
+        <ul>
+          <li v-for="block in store.selectedBlocks" :key="block.moreLabel">
             {{ block.moreLabel }}
           </li>
         </ul>
       </div>
       <div>
-        <p class="text-lg font-semibold text-gray-700">Общее время:</p>
         <p class="text-gray-600">{{ formattedTime }}</p>
-      </div>
-      <div>
-        <p class="text-lg font-semibold text-gray-700">Стоимость:</p>
-        <p class="text-gray-600">
-          {{ priceRange.min }}-{{ priceRange.max }} руб.
-        </p>
+        <p class="text-gray-600">{{ priceRange.min }}-{{ priceRange.max }} BYN</p>
       </div>
     </div>
+    <button
+      @click="$emit('go-to-next')"
+      class="w-[40vw] mx-auto mt-4 h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 block"
+    >
+      Записаться
+    </button>
   </div>
 </template>
 
