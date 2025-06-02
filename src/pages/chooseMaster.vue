@@ -1,117 +1,134 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useGlobalStore } from '@/stores/global';
 import arrow from '@/assets/arrow.png';
-import five from '@/assets/five.png';
 import Master from '@/components/master.vue';
+import ButtonTime from '@/components/ui/buttonTime.vue';
+import { useStorage } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 
+const { t, locale } = useI18n();
+const localLang = useStorage('app-locale', 'ru');
 const router = useRouter();
+const route = useRoute();
 const store = useGlobalStore();
+const mode = computed(() => route.query.mode || 'barber');
 
-// Список специалистов
-const masters = [
-  {
-    id: 1,
-    name: 'Анна Иванова',
-    role: 'Топ-мастер',
-    day: 'вт',
-    time: ['12:00', '13:00', '14:00'],
-    img: five,
-    availableServices: ['Удлинённая стрижка 1', 'Удлинённая стрижка 2'],
-  },
-  {
-    id: 2,
-    name: 'Михаил Петров',
-    role: 'Мастер',
-    day: 'вт',
-    time: ['12:00', '13:00', '14:00'],
-    img: five,
-    availableServices: ['Удлинённая стрижка 3', 'Удлинённая стрижка 4'],
-  },
-  {
-    id: 3,
-    name: 'Елена Смирнова',
-    role: 'Топ-мастер',
-    day: 'вт',
-    time: ['12:00', '13:00', '14:00'],
-    img: five,
-    availableServices: ['Удлинённая стрижка 1', 'Удлинённая стрижка 5'],
-  },
-];
-
-// Обработчик выбора специалиста
-const selectMaster = (master, isChecked) => {
-  if (isChecked) {
-    store.setSelectedMaster(master);
-  } else {
-    store.clearSelectedMaster();
+const masters = computed(() => {
+  let filtered = store.barbers;
+  if (store.selectedBlocks.length > 0) {
+    const selectedServices = store.selectedBlocks.map(block => block.moreLabel);
+    filtered = filtered.filter(master =>
+      selectedServices.every(service => master.availableServices.includes(service))
+    );
   }
-};
+  if (store.selectedDate && store.selectedTime) {
+    filtered = filtered.filter(master =>
+      store.getBarberSchedule(master.id, store.selectedDate).includes(store.selectedTime)
+    );
+  }
+  return filtered;
+});
 
-// Обработчик выбора времени специалиста
-const selectMasterTime = (master, time) => {
+const availableTimes = computed(() => {
+  if (mode.value !== 'time' || (store.selectedDate && store.selectedTime)) return [];
+  let filteredBarbers = store.barbers;
+  if (store.selectedBlocks.length > 0) {
+    const selectedServices = store.selectedBlocks.map(block => block.moreLabel);
+    filteredBarbers = filteredBarbers.filter(master =>
+      selectedServices.every(service => master.availableServices.includes(service))
+    );
+  }
+  const allTimes = filteredBarbers
+    .flatMap(master =>
+      Object.entries(master.schedule)
+        .filter(([date]) => new Date(date) >= new Date())
+        .flatMap(([_, times]) => times)
+    );
+  return [...new Set(allTimes)].sort();
+});
+
+const selectMaster = (master) => {
   store.setSelectedMaster(master);
-  store.setSelectedTime(time);
+  console.log('Выбран мастер:', master);
 };
 
-// Обработчик кнопки "Записаться"
-const goToNextPage = () => {
-  if (store.selectedMaster) {
-    if (store.selectedTime) {
-      // Если выбрано время, переходим к выбору услуги
-      router.push({ name: 'hehe' });
-    } else {
-      // Если выбран только специалист, переходим к выбору времени
-      router.push({ name: 'time' }); // Исправлено с 'index' на 'time'
-    }
-  }
+const selectTime = (time) => {
+  store.setSelectedTime(time);
+  console.log('Выбрано время:', time);
 };
+
+const goToTimeSelection = () => {
+  if (store.selectedMaster && store.selectedTime && store.selectedDate && store.selectedBlocks.length > 0) {
+    router.push({ name: 'book' }); 
+  } else if (store.selectedMaster && store.selectedTime) {
+    router.push({ name: 'hehe' }); 
+  } else {
+    router.push({ name: 'time' }); 
+  }
+  console.log('goToTimeSelection:', store.selectedMaster, store.selectedTime, store.selectedDate, store.selectedBlocks);
+};
+
+const goToManageBarbers = () => {
+  router.push({ name: 'manageBarbers' });
+};
+
+
 </script>
 
 <template>
   <div class="w-[40vw] mx-auto py-6">
-    <!-- Заголовок и навигация -->
     <div class="flex gap-x-2">
       <router-link to="/">
         <img :src="arrow" class="w-[1.5vw] h-[3vh] rotate-90 mt-[10px]" />
       </router-link>
       <div class="flex flex-col mb-4">
         <div class="flex items-center gap-x-4">
-          <p class="text-xl">Город</p>
+          <p class="text-xl">{{ t('city') }}</p>
           <img :src="arrow" class="w-[1vw] h-[2vh] mt-[10px]" />
         </div>
-        <p class="text-sm font-bold">Улица</p>
+        <p class="text-sm font-bold">{{ t('street') }}</p>
       </div>
     </div>
 
     <div class="mb-4">
-      <p class="font-bold text-2xl">Выбрать специалиста</p>
+      <p class="font-bold text-2xl">{{ mode === 'barber' ? t('specialist') : t('selectTime') }}</p>
     </div>
 
-    <!-- Список специалистов -->
-    <div class="flex flex-col gap-y-4">
+    <button @click="goToManageBarbers" class="w-full h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 mb-4">
+      {{ t('manageBarbers') }}
+    </button>
+
+    <div v-if="mode === 'barber'" class="flex flex-col gap-y-4">
       <Master
         v-for="master in masters"
         :key="master.id"
         :master="master"
-        :selected-time="store.selectedTime"
         :selected-master-id="store.selectedMaster?.id"
+        :selected-time="store.selectedTime"
         @select-master="selectMaster"
-        @select-time="selectMasterTime"
       />
     </div>
 
-    <!-- Кнопка "Записаться" -->
-    <div
-      v-if="store.selectedMaster"
-      class="fixed bottom-0 left-0 w-full bg-white p-4 shadow-md z-50"
-    >
-      <button
-        @click="goToNextPage"
-        class="w-[40vw] mx-auto h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 block"
-      >
-        Записаться
+    <div v-else-if="mode === 'time'" class="flex flex-col gap-y-4">
+      <div v-if="availableTimes.length === 0" class="text-gray-500 text-center">
+        {{ t('noTimesAvailable') }}
+      </div>
+      <div class="flex flex-row flex-wrap gap-4">
+        <ButtonTime
+          v-for="time in availableTimes"
+          :key="time"
+          :time="time"
+          :is-selected="store.selectedTime === time"
+          @select-time="selectTime"
+        />
+      </div>
+    </div>
+
+    <div v-if="(mode === 'barber' && store.selectedMaster) || (mode === 'time' && store.selectedTime)" class="fixed bottom-0 left-0 w-full bg-white p-4 shadow-md z-50">
+      <button @click="goToTimeSelection" class="w-[40vw] mx-auto h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 block">
+        {{ t('book') }}
       </button>
     </div>
   </div>

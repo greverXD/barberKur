@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useGlobalStore } from '@/stores/global';
-
+import { useStorage } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
+const { t, locale } = useI18n();
+const localLang = useStorage('app-locale', 'ru');
 const store = useGlobalStore();
 const props = defineProps({
   moreLabel: String,
@@ -33,9 +36,8 @@ const completed = computed({
   },
 });
 
-// Проверяем, доступна ли услуга для выбранного специалиста
 const isServiceAvailable = computed(() => {
-  if (!store.selectedMaster) return true; // Если специалист не выбран, все услуги доступны
+  if (!store.selectedMaster) return true;
   return store.selectedMaster.availableServices.includes(props.moreLabel);
 });
 </script>
@@ -54,7 +56,7 @@ const isServiceAvailable = computed(() => {
       <div>
         {{ timeWork }} {{ toggle ? props.text : props.text.slice(0, 50) + '...' }}
         <button @click="toggle = !toggle">
-          {{ toggle ? 'скрыть' : 'ещё' }}
+          {{ toggle ? t('hide') : t('more') }}
         </button>
       </div>
     </div>

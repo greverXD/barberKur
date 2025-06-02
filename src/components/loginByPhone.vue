@@ -1,28 +1,29 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useGlobalStore } from '@/stores/global';
+import { useI18n } from 'vue-i18n';
+import { useStorage } from '@vueuse/core';
 
 const store = useGlobalStore();
+const { t } = useI18n();
+const router = useRouter();
+const localLang = useStorage('app-locale', 'ru');
 
-// Реактивная переменная для номера телефона
 const phone = ref(store.loginData.phone);
 
-// Обновление данных в Pinia
 const updateField = (field, value) => {
   store.updateLoginData(field, value);
 };
 
-// Проверка валидности телефона
 const isPhoneValid = computed(() => {
   return phone.value.trim() !== '';
 });
 
-// Обработчик отправки кода
 const submitPhone = () => {
   if (isPhoneValid.value) {
-    console.log('Отправка кода на телефон:', phone.value);
-    // Здесь можно добавить логику отправки кода (например, API-запрос)
-    store.clearLoginData(); // Очищаем данные после отправки
+    console.log('Sending code to phone:', phone.value);
+    store.clearLoginData();
   }
 };
 </script>
@@ -33,7 +34,7 @@ const submitPhone = () => {
       v-model="phone"
       @input="updateField('phone', $event.target.value)"
       type="tel"
-      placeholder="Номер телефона"
+      :placeholder="t('phoneNumber')"
       class="w-full h-[6vh] rounded-xl p-4 border"
     />
     <button
@@ -42,7 +43,7 @@ const submitPhone = () => {
       class="w-full h-[6vh] rounded-xl"
       :class="isPhoneValid ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
     >
-      Отправить код
+      {{ t('sendCode') }}
     </button>
   </div>
 </template>

@@ -7,7 +7,7 @@ import MoreBlock from "@/components/moreBlock.vue";
 import { useRoute } from "vue-router";
 import CompletedBlock from "./components/completedBlock.vue";
 import InputBlock from "@/components/inputBlock.vue";
-import five from "@/assets/five.png";
+
 import People from "@/components/people.vue";
 import ButtonRecord from "./components/ui/buttonRecord.vue";
 
@@ -17,11 +17,5 @@ import ButtonRecord from "./components/ui/buttonRecord.vue";
 <template>
    
    <router-view />
-
-            
-
-
-
-
 
 </template>

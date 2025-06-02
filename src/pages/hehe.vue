@@ -1,119 +1,119 @@
 <script setup>
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGlobalStore } from '@/stores/global';
 import arrow from '@/assets/arrow.png';
 import MoreBlock from '@/components/moreBlock.vue';
 import CompletedBlock from '@/components/completedBlock.vue';
+import { useStorage } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
+const localLang = useStorage('app-locale', 'ru');
 const router = useRouter();
 const store = useGlobalStore();
+const searchQuery = ref('');
 
-const blocks = [
-  {
-    moreLabel: 'Удлинённая стрижка 1',
-    timeWork: '40 мин',
-    text: 'Длина волос от 4 см и более. Подразумевает под собой массу волос средней длины (и более) по всей голове. Оформляется все исключительно ножницами, с возможным использованием триммера для создания более точной окантовки',
-    moneyOne: '40',
-    moneyTwo: '45',
-  },
-  {
-    moreLabel: 'Удлинённая стрижка 2',
-    timeWork: '60 мин',
-    text: 'Длина волос от 4 см и более. Подразумевает под собой массу волос средней длины (и более) по всей голове. Оформляется все исключительно ножницами, с возможным использованием триммера для создания более точной окантовки',
-    moneyOne: '50',
-    moneyTwo: '55',
-  },
-  {
-    moreLabel: 'Удлинённая стрижка 3',
-    timeWork: '75 мин',
-    text: 'Длина волос от 4 см и более. Подразумевает под собой массу волос средней длины (и более) по всей голове. Оформляется все исключительно ножницами, с возможным использованием триммера для создания более точной окантовки',
-    moneyOne: '60',
-    moneyTwo: '65',
-  },
-  {
-    moreLabel: 'Удлинённая стрижка 4',
-    timeWork: '75 мин',
-    text: 'Длина волос от 4 см и более. Подразумевает под собой массу волос средней длины (и более) по всей голове. Оформляется все исключительно ножницами, с возможным использованием триммера для создания более точной окантовки',
-    moneyOne: '60',
-    moneyTwo: '65',
-  },
-  {
-    moreLabel: 'Удлинённая стрижка 5',
-    timeWork: '75 мин',
-    text: 'Длина волос от 4 см и более. Подразумевает под собой массу волос средней длины (и более) по всей голове. Оформляется все исключительно ножницами, с возможным использованием триммера для создания более точной окантовки',
-    moneyOne: '60',
-    moneyTwo: '65',
-  },
-];
+const services = computed(() => {
+  if (store.selectedMaster) {
+    return store.services.filter(service =>
+      store.selectedMaster.availableServices.includes(service.moreLabel)
+    );
+  }
+  return store.services;
+});
 
-// Обработчик кнопки "Записаться" в CompletedBlock
+const filteredServices = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return services.value;
+  }
+  const query = searchQuery.value.trim().toLowerCase();
+  return services.value.filter(service =>
+    t(service.moreLabel).toLowerCase().startsWith(query)
+  );
+});
+
+const noServicesMessage = computed(() => {
+  if (!store.selectedMaster) {
+    return t('noMasterSelected');
+  }
+  if (!store.selectedMaster.availableServices.length) {
+    return t('noServicesAvailable');
+  }
+  if (searchQuery.value.trim()) {
+    return t('noServicesMatchSearch');
+  }
+  return t('noServicesFound');
+});
+
 const goToNext = () => {
-  if (store.selectedBlocks.length > 0 && store.selectedMaster && store.selectedTime) {
-    // Все данные выбраны, переходим на страницу бронирования
+  if (store.selectedBlocks.length > 0 && store.selectedMaster && store.selectedTime && store.selectedDate) {
     router.push({ name: 'book' });
   } else if (store.selectedBlocks.length > 0 && !store.selectedMaster) {
-    // Выбрана услуга, но не выбран специалист, переходим на выбор специалиста
     router.push({ name: 'master' });
-  } else if (store.selectedBlocks.length > 0 && store.selectedMaster && !store.selectedTime) {
-    // Выбраны услуга и специалист, но не выбрано время, переходим на выбор времени
+  } else if (store.selectedBlocks.length > 0 && store.selectedMaster && (!store.selectedTime || !store.selectedDate)) {
     router.push({ name: 'time' });
+  } else {
+    console.log('Не выбраны все необходимые данные');
   }
+  console.log('goToNext:', store.selectedMaster, store.selectedTime, store.selectedDate, store.selectedBlocks);
+};
+
+const goToManageServices = () => {
+  router.push({ name: 'manageServices' });
 };
 </script>
 
 <template>
   <div class="w-[40vw] mx-auto py-6">
-    <!-- Заголовок и навигация -->
     <div class="flex gap-x-2">
       <router-link to="/">
         <img :src="arrow" class="w-[1.5vw] h-[3vh] rotate-90 mt-[10px]" />
       </router-link>
       <div class="flex flex-col mb-4">
         <div class="flex items-center gap-x-4">
-          <p class="text-xl">Город</p>
+          <p class="text-xl">{{ t('city') }}</p>
           <img :src="arrow" class="w-[1vw] h-[2vh] mt-[10px]" />
         </div>
-        <p class="text-sm font-bold">Улица</p>
+        <p class="text-sm font-bold">{{ t('street') }}</p>
       </div>
     </div>
 
     <div class="mb-4">
-      <p class="font-bold text-2xl">Выбрать услуги</p>
+      <p class="font-bold text-2xl">{{ t('services') }}</p>
     </div>
 
-    <!-- Фильтр мастеров -->
-    <div class="flex gap-x-2 my-4">
-      <button class="rounded-full w-[8vw] h-[5vh] bg-black text-white">
-        ТОП-МАСТЕР
-      </button>
-      <button class="rounded-full w-[5vw] h-[5vh] hover:bg-gray-400">
-        МАСТЕР
-      </button>
-    </div>
+    <button @click="goToManageServices" class="w-full h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 mb-4">
+      {{ t('manageServices') }}
+    </button>
 
-    <!-- Поиск -->
+
+
     <input
+      v-model="searchQuery"
       type="text"
-      placeholder="Найти"
+      :placeholder="t('search')"
       class="w-[35vw] h-[6vh] rounded-xl p-4 mb-4"
+      :aria-label="t('search')"
     />
 
-    <p class="font-bold text-2xl">ТОП-МАСТЕР</p>
 
-    <!-- Список услуг -->
+
+    <div v-if="filteredServices.length === 0" class="text-gray-500 text-center">
+      {{ noServicesMessage }}
+    </div>
     <div class="flex flex-col gap-y-4">
       <MoreBlock
-        v-for="block in blocks"
-        :key="block.moreLabel"
-        :more-label="block.moreLabel"
-        :text="block.text"
-        :timeWork="block.timeWork"
-        :money-one="block.moneyOne"
-        :money-two="block.moneyTwo"
+        v-for="service in filteredServices"
+        :key="service.moreLabel"
+        :more-label="t(service.moreLabel)"
+        :text="t(service.text)"
+        :time-work="service.timeWork"
+        :money-one="service.moneyOne"
+        :money-two="service.moneyTwo"
       />
     </div>
 
-    <!-- Блок с выбранными услугами и кнопкой -->
     <CompletedBlock @go-to-next="goToNext" />
   </div>
 </template>

@@ -1,68 +1,98 @@
 <script setup>
-import { defineProps, defineEmits,computed } from 'vue';
+import { defineProps, computed } from 'vue';
 import { useGlobalStore } from '@/stores/global';
+import { useStorage } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
+import ButtonTime from './ui/buttonTime.vue';
 
+const { t } = useI18n();
+const localLang = useStorage('app-locale', 'ru');
 const store = useGlobalStore();
 const props = defineProps({
   master: Object,
-  selectedTime: String,
   selectedMasterId: [Number, String],
+  selectedTime: String,
 });
 
-const emit = defineEmits(['select-master', 'select-time']);
+const selectMasterAndTime = (time) => {
+  store.setSelectedMaster(props.master);
+  if (time) {
+    store.setSelectedTime(time);
+  }
+  console.log('Selected master and time:', store.selectedMaster, store.selectedTime);
+};
 
-// Проверяем, выбран ли текущий специалист
 const isMasterSelected = computed(() => {
   return props.selectedMasterId === props.master.id;
+});
+
+const availableDates = computed(() => {
+  if (!props.master || !props.master.schedule || typeof props.master.schedule !== 'object') {
+    return [];
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Object.keys(props.master.schedule)
+    .filter(date => new Date(date) >= today)
+    .sort();
+});
+
+const nearestDate = computed(() => {
+  return availableDates.value[0] || null;
+});
+
+const availableTimes = computed(() => {
+  if (!nearestDate.value || (store.selectedDate && store.selectedTime)) {
+    return [];
+  }
+  const times = store.getBarberSchedule(props.master.id, nearestDate.value).slice(0, 5);
+  console.log(`Available times for master ${props.master.id} on ${nearestDate.value}:`, times);
+  return times;
 });
 </script>
 
 <template>
-  <div class="w-[40vw] mx-auto p-4 bg-white rounded-xl shadow-md">
+  <div class="w-[40vw] mx-auto p-4 bg-white rounded-xl shadow-md relative">
+    <div class="flex w-[1vw] h-[1vh] mr-8">
+      <router-link :to="`/master/${master.id}`" class="absolute top-4 right-14">
+        <span class="text-blue-500 font-bold">i</span>
+      </router-link>
+    </div>
     <div class="flex flex-row gap-x-4">
-      <!-- Изображение специалиста -->
       <div class="w-[4vw] h-auto">
-        <img :src="master.img" class="rounded-full" />
+        <img :src="master.img" class="rounded-full w-[4vw] h-[8vh]" />
       </div>
-      <!-- Информация о специалисте -->
       <div class="flex flex-col">
-        <p class="font-bold">{{ master.name }}</p>
-        <p class="text-gray-600">{{ master.role }}</p>
+        <p class="font-bold">{{ t(master.name) }}</p>
+        <p class="text-gray-600">{{ t(master.role) }}</p>
       </div>
-      <!-- Чекбокс для выбора специалиста -->
       <div class="ml-auto">
         <input
           type="checkbox"
-          :checked="isMasterSelected && !selectedTime"
-          @change="$emit('select-master', master, $event.target.checked)"
+          :checked="isMasterSelected"
+          @change="selectMasterAndTime(null)"
           class="w-5 h-5"
         />
       </div>
     </div>
 
-    <!-- Доступное время -->
-    <div class="mt-4">
-      <p class="text-sm">Ближайшее время для записи ({{ master.day }})</p>
+    <div v-if="availableTimes.length > 0" class="mt-4">
+      <p class="text-sm">{{ t('nearestTime') }} ({{ nearestDate }})</p>
       <div class="flex flex-row gap-x-2 mt-2">
-        <button
-          v-for="time in master.time"
+        <ButtonTime
+          v-for="time in availableTimes"
           :key="time"
-          :class="[
-            'flex items-center justify-center w-[5vw] h-[5vh] rounded-2xl',
-            isMasterSelected && selectedTime === time ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300',
-          ]"
-          @click="$emit('select-time', master, time)"
-        >
-          {{ time }}
-        </button>
+          :time="time"
+          :is-selected="isMasterSelected && selectedTime === time"
+          @select-time="selectMasterAndTime"
+        />
       </div>
     </div>
 
-    <!-- Доступные услуги -->
     <div class="mt-4">
-      <p class="text-sm">Доступные услуги:</p>
+      <p class="text-sm">{{ t('availableServices') }}</p>
       <ul class="list-disc pl-5">
-        <li v-for="service in master.availableServices" :key="service">{{ service }}</li>
+        <li v-for="service in master.availableServices" :key="service">{{ t(service) }}</li>
       </ul>
     </div>
   </div>

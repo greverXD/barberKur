@@ -1,7 +1,10 @@
 <script setup>
 import { computed, defineEmits } from 'vue';
 import { useGlobalStore } from '@/stores/global';
-
+import { useStorage } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
+const { t, locale } = useI18n();
+const localLang = useStorage('app-locale', 'ru');
 const store = useGlobalStore();
 const emit = defineEmits(['go-to-next']);
 
@@ -16,12 +19,12 @@ const formattedTime = computed(() => {
   const hours = Math.floor(totalTime.value / 60);
   const minutes = totalTime.value % 60;
   if (hours === 0) {
-    return `${minutes} мин`;
+    return `${minutes} ${t('minutes')}`;
   }
   if (minutes === 0) {
-    return `${hours} ч`;
+    return `${hours} ${t('hours')}`;
   }
-  return `${hours} ч ${minutes} мин`;
+  return `${hours} ${t('hours')} ${minutes} ${t('minutes')}`;
 });
 
 const priceRange = computed(() => {
@@ -53,14 +56,14 @@ const priceRange = computed(() => {
       </div>
       <div>
         <p class="text-gray-600">{{ formattedTime }}</p>
-        <p class="text-gray-600">{{ priceRange.min }}-{{ priceRange.max }} BYN</p>
+        <p class="text-gray-600">{{ priceRange.min }}-{{ priceRange.max }} {{ t('currency') }}</p>
       </div>
     </div>
     <button
       @click="$emit('go-to-next')"
       class="w-[40vw] mx-auto mt-4 h-[6vh] bg-black text-white rounded-xl hover:bg-gray-800 block"
     >
-      Записаться
+      {{ t('book') }}
     </button>
   </div>
 </template>
