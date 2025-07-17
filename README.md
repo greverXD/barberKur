@@ -12,5 +12,5 @@ npm install
 ```
 
 
-XOsX.gif
+![Game 2048 gif](./XOsX.gif)
 
