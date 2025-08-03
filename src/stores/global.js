@@ -2,10 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useGlobalStore = defineStore('globalStore', {
   state: () => {
-    const savedServices = localStorage.getItem('services');
-    const savedBarbers = localStorage.getItem('barbers');
-    const savedBookings = localStorage.getItem('bookings');
-
+    // Определяем initialServices и initialBarbers в начале
     const initialServices = [
       {
         moreLabel: 'Удлинённая стрижка 1',
@@ -71,9 +68,9 @@ export const useGlobalStore = defineStore('globalStore', {
         name: 'Анна Иванова',
         role: 'Топ-мастер',
         schedule: {
-          '2025-06-01': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-          '2025-06-02': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-          '2025-06-03': ['12:00', '13:00', '14:00', '15:00', '16:00'],
+          '2025-08-21': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+          '2025-08-22': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+          '2025-08-23': ['12:00', '13:00', '14:00', '15:00', '16:00'],
         },
         img: '/src/assets/two.png',
         availableServices: [
@@ -93,9 +90,9 @@ export const useGlobalStore = defineStore('globalStore', {
         name: 'Михаил Петров',
         role: 'Мастер',
         schedule: {
-          '2025-06-01': ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-          '2025-06-02': ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-          '2025-06-03': ['12:00', '13:00', '14:00'],
+          '2025-08-24': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+          '2025-08-25': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+          '2025-08-26': ['12:00', '13:00', '14:00', '15:00', '16:00'],
         },
         img: '/src/assets/three.png',
         availableServices: [
@@ -114,9 +111,9 @@ export const useGlobalStore = defineStore('globalStore', {
         name: 'Елена Смирнова',
         role: 'Топ-мастер',
         schedule: {
-          '2025-06-01': ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
-          '2025-06-02': ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
-          '2025-06-03': ['12:00', '13:00', '14:00'],
+          '2025-08-27': ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+          '2025-08-28': ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+          '2025-08-29': ['12:00', '13:00', '14:00'],
         },
         img: '/src/assets/four.png',
         availableServices: [
@@ -129,6 +126,29 @@ export const useGlobalStore = defineStore('globalStore', {
         reviews: [],
       },
     ];
+
+    // Дефолтный массив времени от 10:00 до 22:00 с шагом в час
+    const defaultTimes = [
+      '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', 
+      '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+    ];
+
+    // Теперь получаем данные из localStorage
+    const savedServices = localStorage.getItem('services');
+    const savedBarbers = localStorage.getItem('barbers');
+    const savedBookings = localStorage.getItem('bookings');
+
+    console.log('Saved barbers from localStorage:', savedBarbers);
+    console.log('Initial barbers:', initialBarbers);
+
+    let barbers;
+    try {
+      barbers = savedBarbers ? JSON.parse(savedBarbers) : initialBarbers;
+    } catch (e) {
+      console.error('Error parsing savedBarbers:', e);
+      barbers = initialBarbers;
+    }
+    console.log('Loaded barbers:', barbers);
 
     return {
       selectedBlocks: [],
@@ -149,8 +169,9 @@ export const useGlobalStore = defineStore('globalStore', {
         email: '',
         password: '',
       },
-      barbers: savedBarbers ? JSON.parse(savedBarbers) : initialBarbers,
+      barbers,
       services: savedServices ? JSON.parse(savedServices) : initialServices,
+      defaultTimes,
     };
   },
   actions: {
@@ -171,6 +192,7 @@ export const useGlobalStore = defineStore('globalStore', {
     setSelectedMaster(master) {
       this.selectedMaster = master;
       console.log('Set master:', master, 'Current selectedMaster:', this.selectedMaster);
+      console.log('Master schedule:', master.schedule);
     },
     setSelectedTime(time) {
       this.selectedTime = time;
@@ -179,10 +201,16 @@ export const useGlobalStore = defineStore('globalStore', {
     setSelectedDate(date) {
       this.selectedDate = date;
       console.log('Set date:', date, 'Current selectedDate:', this.selectedDate);
+      // Устанавливаем дефолтное время из defaultTimes
+      if (!this.selectedTime) {
+        const defaultTime = this.defaultTimes[0]; // Первое время: '10:00'
+        this.setSelectedTime(defaultTime);
+        console.log('Set default time:', defaultTime);
+      }
     },
     clearSelectedMaster() {
       this.selectedMaster = null;
-      this.selectedTime = null;
+      // Удаляем сброс selectedTime, чтобы сохранить время
       console.log('Cleared master, selectedMaster:', this.selectedMaster, 'selectedTime:', this.selectedTime);
     },
     clearSelectedTime() {
@@ -294,8 +322,16 @@ export const useGlobalStore = defineStore('globalStore', {
       }
     },
     getBarberSchedule(barberId, date) {
+      console.log('Looking for master with id:', barberId);
+      console.log('All barbers:', this.barbers);
       const master = this.barbers.find(b => b.id === barberId);
-      if (!master || !date) return [];
+      if (!master || !date) {
+        console.log(`No master found for id ${barberId} or no date provided: ${date}`);
+        return [];
+      }
+      console.log('Master found:', master);
+      console.log('Master schedule:', master.schedule);
+      console.log(`Schedule for ${date}:`, master.schedule[date]);
       return master.schedule[date] || [];
     },
     isFullyBooked() {

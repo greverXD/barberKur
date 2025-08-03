@@ -52,6 +52,7 @@ const availableTimes = computed(() => {
 const selectMaster = (master) => {
   store.setSelectedMaster(master);
   console.log('Выбран мастер:', master);
+  console.log('Расписание мастера:', master.schedule);
 };
 
 const selectTime = (time) => {

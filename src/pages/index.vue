@@ -19,7 +19,14 @@ const currentMonth = ref(new Date().getMonth());
 const currentYear = ref(new Date().getFullYear());
 const isAnimating = ref(false);
 
+// Статический массив времени от 9:00 до 22:00 с шагом в час
+const defaultTimes = [
+  '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+];
+
 onMounted(() => {
+  console.log('Selected master on mount:', store.selectedMaster);
   if (
     store.selectedMaster &&
     store.selectedDate &&
@@ -66,6 +73,9 @@ const calendarDays = computed(() => {
   const firstDay = firstDayOfMonth.value;
   const totalDays = daysInMonth.value;
 
+  console.log('Selected master in calendarDays:', store.selectedMaster);
+  console.log('Schedule keys:', store.selectedMaster ? Object.keys(store.selectedMaster.schedule) : 'No master selected');
+
   for (let i = 1; i < firstDay; i++) {
     days.push({ empty: true });
   }
@@ -73,11 +83,15 @@ const calendarDays = computed(() => {
   for (let i = 1; i <= totalDays; i++) {
     const date = new Date(currentYear.value, currentMonth.value, i);
     const dateStr = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    console.log('Сгенерированный dateStr:', dateStr);
     const isPast = date < today;
     const isSelected = store.selectedDate === dateStr;
     let isAvailable = true;
+
     if (store.selectedMaster) {
-      isAvailable = store.getBarberSchedule(store.selectedMaster.id, dateStr).length > 0;
+      const scheduleForDate = store.getBarberSchedule(store.selectedMaster.id, dateStr);
+      console.log(`Schedule for ${dateStr}:`, scheduleForDate);
+      isAvailable = scheduleForDate.length > 0;
     } else if (store.selectedBlocks.length > 0) {
       const selectedServices = store.selectedBlocks.map(block => block.moreLabel);
       const availableBarbers = store.barbers.filter(master =>
@@ -96,27 +110,19 @@ const calendarDays = computed(() => {
 
 const selectDay = (date) => {
   const day = calendarDays.value.find(d => d.date === date);
-  if (day.isPast || !day.isAvailable) return;
+  if (day.isPast || !day.isAvailable) {
+    console.log(`Cannot select date ${date}: isPast=${day.isPast}, isAvailable=${day.isAvailable}`);
+    return;
+  }
   store.setSelectedDate(date);
   console.log('Selected date:', date);
+
 };
 
 const availableTimes = computed(() => {
   if (!store.selectedDate) return [];
-  let filteredBarbers = store.barbers;
-  if (store.selectedMaster) {
-    filteredBarbers = [store.selectedMaster];
-  } else if (store.selectedBlocks.length > 0) {
-    const selectedServices = store.selectedBlocks.map(block => block.moreLabel);
-    filteredBarbers = filteredBarbers.filter(master =>
-      selectedServices.every(service => master.availableServices.includes(service))
-    );
-  }
-  const allTimes = filteredBarbers
-    .flatMap(master => store.getBarberSchedule(master.id, store.selectedDate));
-  const times = [...new Set(allTimes)].sort();
-  console.log(`Available times for ${store.selectedDate}:`, times);
-  return times;
+  console.log(`Available times for ${store.selectedDate}:`, defaultTimes);
+  return defaultTimes; // Используем статический массив времени
 });
 
 const selectTime = (time) => {
