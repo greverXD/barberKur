@@ -19,7 +19,6 @@ const currentMonth = ref(new Date().getMonth());
 const currentYear = ref(new Date().getFullYear());
 const isAnimating = ref(false);
 
-// Статический массив времени от 9:00 до 22:00 с шагом в час
 const defaultTimes = [
   '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
   '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
@@ -122,7 +121,7 @@ const selectDay = (date) => {
 const availableTimes = computed(() => {
   if (!store.selectedDate) return [];
   console.log(`Available times for ${store.selectedDate}:`, defaultTimes);
-  return defaultTimes; // Используем статический массив времени
+  return defaultTimes; 
 });
 
 const selectTime = (time) => {

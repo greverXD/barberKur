@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 
 export const useGlobalStore = defineStore('globalStore', {
   state: () => {
-    // Определяем initialServices и initialBarbers в начале
     const initialServices = [
       {
         moreLabel: 'Удлинённая стрижка 1',
@@ -126,14 +125,10 @@ export const useGlobalStore = defineStore('globalStore', {
         reviews: [],
       },
     ];
-
-    // Дефолтный массив времени от 10:00 до 22:00 с шагом в час
     const defaultTimes = [
       '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', 
       '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
     ];
-
-    // Теперь получаем данные из localStorage
     const savedServices = localStorage.getItem('services');
     const savedBarbers = localStorage.getItem('barbers');
     const savedBookings = localStorage.getItem('bookings');
@@ -201,16 +196,14 @@ export const useGlobalStore = defineStore('globalStore', {
     setSelectedDate(date) {
       this.selectedDate = date;
       console.log('Set date:', date, 'Current selectedDate:', this.selectedDate);
-      // Устанавливаем дефолтное время из defaultTimes
       if (!this.selectedTime) {
-        const defaultTime = this.defaultTimes[0]; // Первое время: '10:00'
+        const defaultTime = this.defaultTimes[0];
         this.setSelectedTime(defaultTime);
         console.log('Set default time:', defaultTime);
       }
     },
     clearSelectedMaster() {
       this.selectedMaster = null;
-      // Удаляем сброс selectedTime, чтобы сохранить время
       console.log('Cleared master, selectedMaster:', this.selectedMaster, 'selectedTime:', this.selectedTime);
     },
     clearSelectedTime() {

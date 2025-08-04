@@ -12,8 +12,8 @@ const store = useGlobalStore();
 const selectedBarber = ref(null);
 const isEditing = ref(false);
 const errorMessage = ref('');
-const newScheduleDate = ref(''); // Поле для ввода даты (например, 2025-06-03)
-const newScheduleTimes = ref(''); // Поле для ввода времени (например, 12:00, 12:30)
+const newScheduleDate = ref(''); 
+const newScheduleTimes = ref(''); 
 
 const barbers = computed(() => store.barbers);
 
@@ -31,7 +31,7 @@ const addBarber = () => {
     };
     store.addBarber(newBarber);
     errorMessage.value = '';
-    editBarber(newBarber); // Открываем форму редактирования сразу после добавления
+    editBarber(newBarber); 
   } catch (error) {
     errorMessage.value = t('errorCreatingBarber') + ': ' + error.message;
   }
